@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TN VED Processor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for modern SVG icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Modern Loader */
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e7ff;
+            /* Indigo 100 */
+            border-radius: 50%;
+            border-top-color: #4f46e5;
+            /* Indigo 600 */
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .delay-100 {
+            animation-delay: 100ms;
+        }
+
+        .delay-200 {
+            animation-delay: 200ms;
+        }
+
+        /* Processing overlay */
+        .processing-blur {
+            filter: blur(2px);
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div class="w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden fade-in border border-gray-100 relative">
+
+        <!-- Header Section -->
+        <div class="p-8 pb-6 border-b border-gray-100 text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-blue-50 mb-4 text-blue-600">
+                <i class="ph ph-file-xls text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">TN VED Processor</h1>
+        </div>
+
+        <!-- Form Section -->
+        <div class="p-8" id="form-section">
+            <form id="uploadForm" method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Error Messages -->
+                {% if form.errors %}
+                <div class="rounded-lg bg-red-50 border border-red-100 p-4 mb-6 fade-in delay-100">
+                    <div class="flex">
+                        <i class="ph ph-warning-circle text-red-500 text-xl mr-3 mt-0.5"></i>
+                        <div class="text-sm text-red-700">
+                            {% for field in form %}
+                            {% for error in field.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- URL Input -->
+                <div class="space-y-2 fade-in delay-100">
+                    <label for="{{ form.url.id_for_label }}" class="block text-sm font-medium text-gray-700 ml-1">
+                        URL страницы с пошлинами
+                    </label>
+                    <div class="relative">
+                        {{ form.url }}
+                    </div>
+                </div>
+
+                <!-- File Input -->
+                <div class="space-y-2 fade-in delay-200">
+                    <label class="block text-sm font-medium text-gray-700 ml-1">
+                        Загрузка документа
+                    </label>
+
+                    <div class="relative group">
+                        <!-- Custom Drag Drop Zone Look -->
+                        <div id="drop-zone"
+                            class="relative w-full h-36 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 flex flex-col items-center justify-center cursor-pointer overflow-hidden bg-gray-50">
+
+                            <!-- Prompt State -->
+                            <div id="upload-prompt" class="text-center p-4">
+                                <i
+                                    class="ph ph-upload-simple text-3xl text-gray-400 mb-2 group-hover:text-blue-500 transition-colors"></i>
+                                <p class="text-sm text-gray-700 font-medium">Кликните либо перетащите файл для загрузки</p>
+                                <p class="text-xs text-gray-500 mt-1">.DOCX files only</p>
+                            </div>
+
+                            <!-- Selected File State -->
+                            <div id="file-info"
+                                class="hidden absolute inset-0 bg-white flex flex-col items-center justify-center p-4 z-20">
+                                <i class="ph ph-file-doc text-3xl text-blue-500 mb-2"></i>
+                                <p id="filename-display"
+                                    class="text-sm text-gray-900 font-medium truncate max-w-full px-4"></p>
+                                <button type="button" id="remove-file"
+                                    class="mt-2 text-xs text-red-500 hover:text-red-700 font-medium flex items-center">
+                                    <i class="ph ph-x mr-1"></i> Remove file
+                                </button>
+                            </div>
+
+                            <!-- Actual Input (Invisible but covering) -->
+                            {{ form.file }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="pt-2 fade-in delay-200">
+                    <button type="submit"
+                        class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transform transition-all duration-200 hover:-translate-y-0.5 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Начать обработку
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Processing Overlay -->
+        <div id="loader-overlay"
+            class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center text-center p-6 fade-in">
+            <div class="spinner mb-6"></div>
+            <h3 class="text-lg font-semibold text-gray-900">Processing Document</h3>
+            <p class="text-sm text-gray-500 mt-2 max-w-xs">Please wait while we extract duty rates and translate them.
+                This may take a few moments.</p>
+        </div>
+
+    </div>
+
+    <script>DOM Elements
+        const fileInput = document.getElementById('{{ form.file.id_for_label }}');
+        const dropZone = document.getElementById('drop-zone');
+        const uploadPrompt = document.getElementById('upload-prompt');
+        const fileInfo = document.getElementById('file-info');
+        const filenameDisplay = document.getElementById('filename-display');
+        const removeFileBtn = document.getElementById('remove-file');
+        const form = document.getElementById('uploadForm');
+        const loaderOverlay = document.getElementById('loader-overlay');
+        const formSection = document.getElementById('form-section');
+
+        // Enhance input styles from generic form widget
+        const urlInput = document.getElementById('{{ form.url.id_for_label }}');
+        if (urlInput) {
+            urlInput.classList.add('pl-10'); // Add padding for the icon
+        }
+
+
+        // File Selection Logic
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                filenameDisplay.textContent = file.name;
+                uploadPrompt.classList.add('hidden');
+                fileInfo.classList.remove('hidden');
+            }
+        }
+
+        // Remove File Logic
+        removeFileBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent opening dialog
+            e.preventDefault();
+            fileInput.value = '';
+            uploadPrompt.classList.remove('hidden');
+            fileInfo.classList.add('hidden');
+        });
+
+        // Cookie Helpers for File Download Detection
+        function getCookie(name) {
+            let matches = document.cookie.match(new RegExp(
+                "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+            ));
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/';
+        }
+
+        // Form Submit Logic
+        form.addEventListener('submit', function () {
+            // Rese t cookie
+            deleteCookie('fileDownload');
+
+            rlay
+            loaderOverlay.classList.remove('hidden');
+
+            // Optional: Blur the background form to emphasize the overlay
+            // formSection.classList.add('processing-blur');
+
+            //  Poll for cookie
+            const checkCookie = setInterval(function () {
+                if (getCookie('fileDownload') === 'true') {
+                    clearInte                   deleteCookie('fileDownload');
+
+                    // Reset UI
+                    loaderOverlay.classList.add('hidden'   // formSection.classList.remove('processing-blur');
+
+                    // If you want to reset the file input after success:
+                    // fileInput.value = '';
+                    // uploadPrompt.classList.remove('hidden');
+                    // fileInfo.classList.add('hidden');
+                }
+            }, 500);
+        } / Drag and Drop Visual Feedback
+        dropZone.addEventListener('dragover'{
+            dropZone.classList.add('border-blue-500',);
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-blue            ue-50');
+        });
+
+        dropZone.addEventListener('drop', () => {
+            d.classList.remove('border-blue-500', 'bg-blue-50');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Virtual Environments
+.venv/
+env/
+venv/
+.env
+
+# Django
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+*.pot
+*.pyc
+*.log
+
+# Pytest
+.cache/
+pytest_cache/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+.nose2.cfg
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+.env.*.local
+
+# Logs
+*.log
+
+# Node / frontend (if any)
+node_modules/
+dist/
+build/
