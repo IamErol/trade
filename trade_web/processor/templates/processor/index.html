@@ -125,7 +125,8 @@
                             <div id="upload-prompt" class="text-center p-4">
                                 <i
                                     class="ph ph-upload-simple text-3xl text-gray-400 mb-2 group-hover:text-blue-500 transition-colors"></i>
-                                <p class="text-sm text-gray-700 font-medium">Кликните либо перетащите файл для загрузки</p>
+                                <p class="text-sm text-gray-700 font-medium">Кликните либо перетащите файл для загрузки
+                                </p>
                                 <p class="text-xs text-gray-500 mt-1">.DOCX files only</p>
                             </div>
 
@@ -168,7 +169,8 @@
 
     </div>
 
-    <script>DOM Elements
+    <script>
+        // DOM Elements
         const fileInput = document.getElementById('{{ form.file.id_for_label }}');
         const dropZone = document.getElementById('drop-zone');
         const uploadPrompt = document.getElementById('upload-prompt');
@@ -221,22 +223,24 @@
 
         // Form Submit Logic
         form.addEventListener('submit', function () {
-            // Rese t cookie
+            // Reset cookie
             deleteCookie('fileDownload');
 
-            rlay
+            // Show overlay
             loaderOverlay.classList.remove('hidden');
 
             // Optional: Blur the background form to emphasize the overlay
             // formSection.classList.add('processing-blur');
 
-            //  Poll for cookie
+            // Poll for cookie
             const checkCookie = setInterval(function () {
                 if (getCookie('fileDownload') === 'true') {
-                    clearInte                   deleteCookie('fileDownload');
+                    clearInterval(checkCookie);
+                    deleteCookie('fileDownload');
 
                     // Reset UI
-                    loaderOverlay.classList.add('hidden'   // formSection.classList.remove('processing-blur');
+                    loaderOverlay.classList.add('hidden');
+                    // formSection.classList.remove('processing-blur');
 
                     // If you want to reset the file input after success:
                     // fileInput.value = '';
@@ -244,17 +248,28 @@
                     // fileInfo.classList.add('hidden');
                 }
             }, 500);
-        } / Drag and Drop Visual Feedback
-        dropZone.addEventListener('dragover'{
-            dropZone.classList.add('border-blue-500',);
+        });
+
+        // Drag and Drop Visual Feedback
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-500', 'bg-blue-50');
         });
 
         dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('border-blue            ue-50');
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
         });
 
-        dropZone.addEventListener('drop', () => {
-            d.classList.remove('border-blue-500', 'bg-blue-50');
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                fileInput.files = e.dataTransfer.files;
+                // Trigger change event manually
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
         });
     </script>
 </body>

@@ -1,10 +1,11 @@
+import urllib3
 from docx import Document
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 import requests
 from bs4 import BeautifulSoup
-import io
 import re
+
 
 def extract_abbreviations(doc):
     """
@@ -232,13 +233,7 @@ def translate_rate(text):
     return text.strip()
 
 def fetch_duty_rates(url):
-    import requests
-    import urllib3
-    from bs4 import BeautifulSoup
-    import time
-
     print(f"Fetching duty rates from {url}...")
-
     # Disable warnings for verify=False
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -284,8 +279,6 @@ def fetch_duty_rates(url):
             print("Connection error, retrying...")
         except Exception as e:
             print(f"Unknown error: {e}, retrying...")
-
-        time.sleep(1)
 
     if not html_content:
         print("Failed to fetch data from lex.uz")
