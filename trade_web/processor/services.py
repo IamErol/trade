@@ -317,8 +317,6 @@ def fetch_duty_rates(url):
 
                 if "ТИФ ТНнинг" in code_str:
                     continue
-                if len(rate) > 5:
-                    print(rate)
 
                 # Translate rate
                 rate = translate_rate(rate)
@@ -376,7 +374,7 @@ def generate_tn_ved_excel(
     )
 
     # Set headers
-    headers = ["Код ТН ВЭД", "Наименование позиции", "Доп. ед. изм.", "Код ед. изм.", "Ставка пошлины"]
+    headers = ["code", "description", "unit", "unit code", "duty_rate_value"]
 
     for col, header in enumerate(headers, 1):
         cell = sheet.cell(row=1, column=col, value=header)
